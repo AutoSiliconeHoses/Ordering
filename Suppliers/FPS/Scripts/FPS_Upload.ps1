@@ -1,10 +1,10 @@
 ﻿$Host.Ui.RawUI.WindowTitle = "FPS Ordering"
 $filepath = $args[0]
-$customerRef = $filepath.Replace('\\DISKSTATION\Feeds\Ordering\Uploads\','').Replace('.csv','')
-#$filepath = '\\DISKSTATION\Feeds\Ordering\Uploads\Test.csv'
+$customerRef = $filepath.Replace('\\DISKSTATION\Feeds\Ordering\Suppliers\FPS\Uploads\','').Replace('.csv','')
+#$filepath = '\\DISKSTATION\Feeds\Ordering\Suppliers\FPS\Uploads\Test.csv'
 #$customerRef = 'YEET'
 
-$WatinPath = '\\DISKSTATION\Feeds\Ordering\Scripts\WatiN\bin\net40\WatiN.Core.dll'
+$WatinPath = '\\DISKSTATION\Feeds\Ordering\Resources\WatiN\bin\net40\WatiN.Core.dll'
 $watin = [Reflection.Assembly]::LoadFrom( $WatinPath )
 $ie = new-object WatiN.Core.IE("https://fdrive.fpsdistribution.co.uk/savedbasket/upload")
 
@@ -12,7 +12,7 @@ $ie = new-object WatiN.Core.IE("https://fdrive.fpsdistribution.co.uk/savedbasket
 $ie.WaitForComplete()
 If ($ie.Uri.AbsoluteUri -eq "https://fdrive.fpsdistribution.co.uk/user/login") {
     "Login Page"
-    gc "\\DISKSTATION\Feeds\Ordering\Scripts\login.txt" | % {Invoke-Expression $_}
+    gc "\\DISKSTATION\Feeds\Ordering\Suppliers\FPS\Scripts\login.txt" | % {Invoke-Expression $_}
 
     $ie.TextField({param($fu) $fu.GetAttributeValue("name") -eq 'Username' }).Value = $username
     $ie.TextField({param($fu) $fu.GetAttributeValue("name") -eq 'Password' }).Value = $password
@@ -39,7 +39,7 @@ If ($ie.Uri.AbsoluteUri -eq "https://fdrive.fpsdistribution.co.uk/savedbasket/pr
 			$errorBool = $true
 			$errorMessage = $customerRef + " - " + $_.Text
 			$errorMessage
-			$error | Add-Content '\\DISKSTATION\Feeds\Ordering\Errors.txt'
+			$error | Add-Content '\\DISKSTATION\Feeds\Ordering\Suppliers\FPS\Errors.txt'
         }
     }
 		If ($errorBool) {

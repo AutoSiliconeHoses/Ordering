@@ -1,8 +1,7 @@
-
-Scripts/WatiN/
-
 *.csv
 
 *.lnk
 
 *.txt
+
+Resources/

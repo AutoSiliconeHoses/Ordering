@@ -5,7 +5,7 @@ $export = Import-CSV $file | Select 'SaleID', 'SellerID','Item SKU','Item Qty' |
 
 $badIds | % {
     $badid = "Bad OrderId: " + $_.SaleId
-    $badid | Add-Content '\\DISKSTATION\Feeds\Ordering\Errors.txt'
+    $badid | Add-Content '\\DISKSTATION\Feeds\Ordering\Suppliers\FPS\Errors.txt'
 }
 
 $export | % {
@@ -31,7 +31,7 @@ $export | % {
     }
 
     $orderId
-    $orderPath = "\\DISKSTATION\Feeds\Ordering\Uploads\$orderId`.csv"
+    $orderPath = "\\DISKSTATION\Feeds\Ordering\Suppliers\FPS\Uploads\$orderId`.csv"
     $sku = $_."Item SKU" -replace '(-...-FPS).*', ''
     $qty = $_."Item Qty"
     $order = "$sku,$qty"
