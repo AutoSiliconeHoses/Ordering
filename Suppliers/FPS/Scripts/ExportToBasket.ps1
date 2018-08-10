@@ -5,7 +5,7 @@ $export = Import-CSV $file | Select 'SaleID', 'SellerID','Item SKU','Item Qty' |
 
 $badIds | % {
     $badid = "Bad OrderId: " + $_.SaleId
-    $badid | Add-Content '\\DISKSTATION\Feeds\Ordering\Suppliers\FPS\Errors.txt'
+    $badid | Add-Content '\\DISKSTATION\Feeds\Ordering\Errors\FPSerrors.txt'
 }
 
 $export | % {

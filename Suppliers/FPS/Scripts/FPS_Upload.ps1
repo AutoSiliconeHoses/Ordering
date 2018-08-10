@@ -2,7 +2,7 @@
 $filepath = $args[0]
 $customerRef = $filepath.Replace('\\DISKSTATION\Feeds\Ordering\Suppliers\FPS\Uploads\','').Replace('.csv','')
 #$filepath = '\\DISKSTATION\Feeds\Ordering\Suppliers\FPS\Uploads\Test.csv'
-#$customerRef = 'YEET'
+#$customerRef = 'STOP'
 
 $WatinPath = '\\DISKSTATION\Feeds\Ordering\Resources\WatiN\bin\net40\WatiN.Core.dll'
 $watin = [Reflection.Assembly]::LoadFrom( $WatinPath )
@@ -25,7 +25,7 @@ If ($ie.Uri.AbsoluteUri -eq "https://fdrive.fpsdistribution.co.uk/savedbasket/up
     "Logged In"
     Try {$ie.FileUpload({param($fu) $fu.GetAttributeValue("name") -eq 'file' }).set($filepath)}
     Catch {"File not found"; $ie.Close(); Exit}
-    $ie.Button({param($fu) $fu.GetAttributeValue("ClassName") -eq 'btn btn-primary btn-block filepicker-load' }).Click()
+    $ie.Button({param($fu) $fu.GetAttributeValue("ClassName") -eq 'btn btn-primary btn-block filepicker-load' }).ClickNoWait()
     "File Uploaded"
 }
 
@@ -39,14 +39,14 @@ If ($ie.Uri.AbsoluteUri -eq "https://fdrive.fpsdistribution.co.uk/savedbasket/pr
 			$errorBool = $true
 			$errorMessage = $customerRef + " - " + $_.Text
 			$errorMessage
-			$error | Add-Content '\\DISKSTATION\Feeds\Ordering\Suppliers\FPS\Errors.txt'
+			$errorMessage | Add-Content '\\DISKSTATION\Feeds\Ordering\Errors\FPSerrors.txt'
         }
     }
 		If ($errorBool) {
             $ie.Close()
 			Exit
 		}
-    $ie.Link({param($fu) $fu.GetAttributeValue("ClassName") -eq 'btn btn-primary purchaseorder-continue' }).Click()
+    $ie.Link({param($fu) $fu.GetAttributeValue("ClassName") -eq 'btn btn-primary purchaseorder-continue' }).ClickNoWait()
     $ie.Div({param($fu) $fu.GetAttributeValue("ClassName") -eq 'alert alert-info'}).InnerHtml
     If ($ie.Div({param($fu) $fu.GetAttributeValue("ClassName") -eq 'alert alert-info'}).InnerHtml -like 'Your basket is currently empty') {$ie.Close(); EXIT}
     "Continuing"
@@ -56,7 +56,7 @@ If ($ie.Uri.AbsoluteUri -eq "https://fdrive.fpsdistribution.co.uk/savedbasket/pr
 $ie.WaitForComplete()
 If ($ie.Uri.AbsoluteUri -eq "https://fdrive.fpsdistribution.co.uk/basket") {
     "Proceeding with order"
-    $ie.Link({param($fu) $fu.GetAttributeValue("ClassName") -eq 'btn btn-primary btn-block' }).Click()
+    $ie.Div({param($fu) $fu.GetAttributeValue("ClassName") -eq 'basket-checkout' }).Link({param($fu) $fu.GetAttributeValue("ClassName") -eq 'btn btn-primary btn-block' }).ClickNoWait()
 }
 
 #Checkout
@@ -64,25 +64,35 @@ $ie.WaitForComplete()
 If ($ie.Uri.AbsoluteUri -eq "https://fdrive.fpsdistribution.co.uk/order/details") {
     "Filling in checkout form"
     $ie.TextField({param($fu) $fu.GetAttributeValue("name") -eq 'customerref' }).Value = $customerRef
-    $ie.Button({param($fu) $fu.GetAttributeValue("ClassName") -eq 'btn btn-primary btn-block' }).Click()
+    $ie.Button({param($fu) $fu.GetAttributeValue("ClassName") -eq 'btn btn-primary btn-block' }).ClickNoWait()
     "Form complete"
 }
 
-<#
-UNKNOWN TERRITORY
-REQUIRES AN ORDER TO BE MADE
-
 #Order Confirmation
 $ie.WaitForComplete()
-If ($ie.Uri.AbsoluteUri -eq <PUT URL HERE>) {
-    $ie.Button({param($fu) $fu.GetAttributeValue("ClassName") -eq <PUT BUTTON NAME HERE> }).Click()
+If ($ie.Uri.AbsoluteUri -eq "https://fdrive.fpsdistribution.co.uk/order/complete") {
+    "Order comfirmation"
+    $invoice = $ie.Link({param($fu) $fu.GetAttributeValue("ClassName") -eq 'btn btn-default' }).URL
+    $ie.GoToNoWait($invoice)
 }
 
 #Print
 $ie.WaitForComplete()
-If ($ie.Uri.AbsoluteUri -eq <PUT URL HERE>) {
-    $ie.InternetExplorer.ExecWB(6,2,1)
-    $ie.Close()
+If ($ie.Uri.AbsoluteUri -like "https://fdrive.fpsdistribution.co.uk/orderhistory/view/*") {
+    "Order Invoice Page"
+    Try {
+        $ie.WaitUntilContainsText("Advice No.")
+    } Catch {
+        $ie.WaitUntilContainsText("Advice No.")
+    }
+    If ($ie.ContainsText("Advice No.")) {
+        $ie.InternetExplorer.ExecWB(6,2,1)
+        $ie.Close()
+    }
+    If (!($ie.ContainsText("Advice No."))) {
+        $orderId = ($ie.Uri.AbsoluteUri).replace("https://fdrive.fpsdistribution.co.uk/orderhistory/view/","")
+        $errorMessage = "Invoice Loading Timeout. Please print order: $orderId"
+        $errorMessage
+        $errorMessage | Add-Content '\\DISKSTATION\Feeds\Ordering\Errors\FPSerrors.txt'
+    }
 }
-
-#>
